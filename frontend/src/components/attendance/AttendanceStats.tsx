@@ -8,8 +8,8 @@ import {
   ExclamationTriangleIcon,
   UserGroupIcon,
   ChartBarIcon,
-  TrendingUpIcon,
-  TrendingDownIcon
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon
 } from '@heroicons/react/24/outline'
 import { AttendanceStatus } from './AttendanceItem'
 
@@ -176,9 +176,9 @@ export default function AttendanceStats({
 
   // 출석률 트렌드 표시 (예시)
   const getAttendanceTrend = () => {
-    if (stats.attendance_rate >= 90) return { icon: TrendingUpIcon, color: 'text-green-600', label: '우수' }
-    if (stats.attendance_rate >= 70) return { icon: TrendingUpIcon, color: 'text-blue-600', label: '양호' }
-    return { icon: TrendingDownIcon, color: 'text-red-600', label: '개선 필요' }
+    if (stats.attendance_rate >= 90) return { icon: ArrowTrendingUpIcon, color: 'text-green-600', label: '우수' }
+    if (stats.attendance_rate >= 70) return { icon: ArrowTrendingUpIcon, color: 'text-blue-600', label: '양호' }
+    return { icon: ArrowTrendingDownIcon, color: 'text-red-600', label: '개선 필요' }
   }
 
   const trend = getAttendanceTrend()

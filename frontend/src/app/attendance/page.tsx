@@ -5,7 +5,7 @@ import {
   ClockIcon,
   SunIcon,
   MoonIcon,
-  Squares2X2Icon
+  ViewColumnsIcon
 } from '@heroicons/react/24/outline'
 import DatePicker from '@/components/attendance/DatePicker'
 import AttendanceStats from '@/components/attendance/AttendanceStats'
@@ -13,7 +13,7 @@ import AttendanceList from '@/components/attendance/AttendanceList'
 import BulkActions, { FloatingBulkActions } from '@/components/attendance/BulkActions'
 import { AttendanceStatus } from '@/components/attendance/AttendanceItem'
 import { api } from '@/lib/api'
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
+import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
 interface Student {
   id: number
@@ -41,7 +41,7 @@ type TimeSlot = 'morning' | 'afternoon' | 'evening' | 'all'
 const timeSlotConfig = {
   all: {
     label: '전체',
-    icon: Squares2X2Icon,
+    icon: ViewColumnsIcon,
     color: 'bg-gray-600 hover:bg-gray-700',
     emoji: '🕒'
   },
@@ -78,19 +78,24 @@ export default function AttendancePage() {
 
   // 데이터 로드
   const loadData = useCallback(async () => {
+    console.log('loadData 함수 호출됨, 선택된 날짜:', selectedDate)
     try {
       setLoading(true)
       setError(null)
 
       const dateString = selectedDate.toISOString().split('T')[0]
+      console.log('로드할 날짜:', dateString)
 
-      const [studentsRes, attendanceRes] = await Promise.all([
-        api.getStudents({ is_active: true }),
-        api.getAttendance({ 
-          date_filter: dateString,
-          limit: 1000 
-        })
-      ])
+      console.log('API 호출 시작...')
+      
+      const studentsRes = await api.getStudents({ is_active: true })
+      console.log('학생 API 응답:', studentsRes)
+      
+      const attendanceRes = await api.getAttendance({ 
+        limit: 500 
+      })
+      console.log('출석 API 응답:', attendanceRes)
+      console.log('출석 API 상세:', attendanceRes.data)
 
       if (studentsRes.success && studentsRes.data) {
         setStudents(studentsRes.data.students || [])
@@ -99,9 +104,41 @@ export default function AttendancePage() {
       }
 
       if (attendanceRes.success && attendanceRes.data) {
-        setAttendanceRecords(Array.isArray(attendanceRes.data) ? attendanceRes.data : [])
+        // Transform API response to match our local interface
+        const records = Array.isArray(attendanceRes.data) ? attendanceRes.data : []
+        console.log('원본 출석 기록들:', records)
+        console.log('필터링할 날짜:', dateString)
+        
+        const transformedRecords = records
+          .map((record: any) => {
+            const transformed = {
+              id: record.id,
+              student_id: record.student_id || record.studentId,
+              date: record.date,
+              status: record.status || 'not_checked',
+              time_in: record.time_in,
+              time_out: record.time_out,
+              note: record.note
+            }
+            console.log('변환된 기록:', transformed)
+            return transformed
+          })
+          .filter(record => {
+            const matches = record.date === dateString
+            console.log(`날짜 필터: ${record.date} === ${dateString} = ${matches}`)
+            return matches
+          })
+        
+        setAttendanceRecords(transformedRecords)
+        console.log('최종 출석 기록들:', transformedRecords)
       } else {
+        console.log('출석 API 실패 또는 데이터 없음:', attendanceRes)
+        console.log('에러 내용:', attendanceRes.error)
+        // 출석 API가 실패하면 빈 배열로 시작 (나중에 사용자가 출석체크하면 추가됨)
         setAttendanceRecords([])
+        
+        // TODO: GET API가 실패하는 경우 백엔드 구현 확인 필요
+        console.warn('출석 기록 로드 실패 - 백엔드 GET /api/v1/attendance 엔드포인트 확인 필요')
       }
 
     } catch (err) {
@@ -123,6 +160,9 @@ export default function AttendancePage() {
 
   // 출석 상태 변경 핸들러
   const handleStatusChange = async (studentId: number, status: AttendanceStatus, note?: string) => {
+    // Skip API call for 'not_checked' status
+    if (status === 'not_checked') return
+    
     try {
       setIsProcessing(true)
       
@@ -132,25 +172,46 @@ export default function AttendancePage() {
       const attendanceData = {
         student_id: studentId,
         date: dateString,
-        status,
+        status: status as 'present' | 'absent' | 'late' | 'early_leave',
         time_in: (status === 'present' || status === 'late') ? currentTime : undefined,
         note: note || undefined
       }
 
-      const response = await api.markAttendance(attendanceData)
+      // 기존 출석 기록 확인 (같은 날짜의 기록)
+      const existingRecord = attendanceRecords.find(record => 
+        record.student_id === studentId && record.date === dateString
+      )
+      let response
+
+      console.log('출석 체크:', { 
+        studentId, 
+        dateString, 
+        existingRecord,
+        allRecords: attendanceRecords,
+        recordsForStudent: attendanceRecords.filter(r => r.student_id === studentId)
+      })
+
+      if (existingRecord && existingRecord.id) {
+        // 기존 기록이 있으면 PUT으로 업데이트
+        console.log('기존 기록 업데이트:', existingRecord.id)
+        response = await api.updateAttendance(existingRecord.id, attendanceData)
+      } else {
+        // 기존 기록이 없으면 POST로 새로 생성
+        console.log('새 기록 생성')
+        response = await api.markAttendance(attendanceData)
+      }
 
       if (response.success && response.data) {
         // 로컬 상태 업데이트
         setAttendanceRecords(prev => {
-          const existing = prev.find(record => record.student_id === studentId)
-          if (existing) {
+          if (existingRecord) {
             return prev.map(record => 
               record.student_id === studentId 
-                ? { ...record, ...attendanceData }
+                ? { ...record, ...attendanceData, id: response.data?.id || record.id }
                 : record
             )
           } else {
-            return [...prev, { ...attendanceData, id: response.data.id }]
+            return [...prev, { ...attendanceData, id: response.data?.id || Date.now() }]
           }
         })
       } else {
@@ -158,7 +219,39 @@ export default function AttendancePage() {
       }
     } catch (err) {
       console.error('Error updating attendance:', err)
-      alert('출석 체크에 실패했습니다.')
+      
+      // 409 에러 (이미 기록 존재)인 경우 기존 기록을 다시 로드
+      if (err instanceof Error && err.message.includes('409')) {
+        console.log('409 에러 감지 - 출석 기록 다시 로드')
+        try {
+          const currentDateString = selectedDate.toISOString().split('T')[0]
+          const attendanceRes = await api.getAttendance({ 
+            limit: 500 
+          })
+          
+          if (attendanceRes.success && attendanceRes.data) {
+            const records = Array.isArray(attendanceRes.data) ? attendanceRes.data : []
+            const transformedRecords = records
+              .map((record: any) => ({
+                id: record.id,
+                student_id: record.student_id || record.studentId,
+                date: record.date,
+                status: record.status || 'not_checked',
+                time_in: record.time_in,
+                time_out: record.time_out,
+                note: record.note
+              }))
+              .filter(record => record.date === currentDateString)
+            
+            setAttendanceRecords(transformedRecords)
+            console.log('409 에러 후 재로드된 기록들:', transformedRecords)
+          }
+        } catch (reloadErr) {
+          console.error('재로드 실패:', reloadErr)
+        }
+      }
+      
+      alert('출석 체크에 실패했습니다. 기존 기록이 있을 수 있습니다.')
     } finally {
       setIsProcessing(false)
     }
@@ -183,7 +276,7 @@ export default function AttendancePage() {
 
   // 일괄 출석 처리
   const handleBulkStatusChange = async (status: AttendanceStatus) => {
-    if (selectedStudents.length === 0) return
+    if (selectedStudents.length === 0 || status === 'not_checked') return
 
     try {
       setIsProcessing(true)
@@ -194,29 +287,53 @@ export default function AttendancePage() {
       const bulkData = selectedStudents.map(studentId => ({
         student_id: studentId,
         date: dateString,
-        status,
+        status: status as 'present' | 'absent' | 'late' | 'early_leave',
         time_in: (status === 'present' || status === 'late') ? currentTime : undefined
       }))
 
       // API에 일괄 처리 요청
+      let currentRecords = [...attendanceRecords] // 로컬 복사본 생성
+      
       for (const data of bulkData) {
-        const response = await api.markAttendance(data)
+        // 기존 출석 기록 확인 (같은 날짜의 기록)
+        const existingRecord = currentRecords.find(record => 
+          record.student_id === data.student_id && record.date === data.date
+        )
+        let response
+
+        console.log('일괄 처리:', { 
+          studentId: data.student_id, 
+          date: data.date,
+          existingRecord,
+          allRecords: currentRecords.length
+        })
+
+        if (existingRecord && existingRecord.id) {
+          // 기존 기록이 있으면 PUT으로 업데이트
+          console.log('일괄 업데이트:', existingRecord.id)
+          response = await api.updateAttendance(existingRecord.id, data)
+        } else {
+          // 기존 기록이 없으면 POST로 새로 생성
+          console.log('일괄 새 기록 생성')
+          response = await api.markAttendance(data)
+        }
+
         if (response.success && response.data) {
-          // 로컬 상태 업데이트
-          setAttendanceRecords(prev => {
-            const existing = prev.find(record => record.student_id === data.student_id)
-            if (existing) {
-              return prev.map(record => 
-                record.student_id === data.student_id 
-                  ? { ...record, ...data }
-                  : record
-              )
-            } else {
-              return [...prev, { ...data, id: response.data.id }]
-            }
-          })
+          // 로컬 복사본 업데이트
+          if (existingRecord) {
+            currentRecords = currentRecords.map(record => 
+              record.student_id === data.student_id 
+                ? { ...record, ...data, id: response.data?.id || record.id }
+                : record
+            )
+          } else {
+            currentRecords = [...currentRecords, { ...data, id: response.data?.id || Date.now() }]
+          }
         }
       }
+      
+      // 마지막에 한 번에 상태 업데이트
+      setAttendanceRecords(currentRecords)
 
       setSelectedStudents([]) // 선택 초기화
     } catch (err) {

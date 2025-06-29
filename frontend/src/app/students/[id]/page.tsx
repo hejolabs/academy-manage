@@ -16,7 +16,7 @@ import {
   ClockIcon
 } from '@heroicons/react/24/outline'
 import { api } from '@/lib/api'
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
+import LoadingSpinner from '@/components/ui/LoadingSpinner'
 
 interface Student {
   id: number
@@ -32,16 +32,8 @@ interface Student {
     [key: string]: string
   }
   attendance_rate?: number
-  active_payment?: {
-    id: number
-    amount: number
-    start_date: string
-    end_date: string
-    days_until_expiry: number
-    progress_percentage: number
-    sessions_total: number
-    sessions_used: number
-  }
+  recent_attendances?: AttendanceRecord[]
+  active_payments?: PaymentRecord[]
 }
 
 interface AttendanceRecord {
@@ -109,30 +101,26 @@ export default function StudentDetailPage({ params }: { params: { id: string } }
       setLoading(true)
       setError(null)
 
-      // 병렬로 데이터 로드
-      const [studentRes, attendanceRes, paymentsRes] = await Promise.all([
-        api.getStudent(studentId),
-        api.getAttendance({
-          student_id: studentId,
-          start_date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          end_date: new Date().toISOString().split('T')[0],
-          limit: 30
-        }),
-        api.getPayments({ student_id: studentId })
-      ])
+      // 학생 데이터 로드 (출석 기록과 결제 정보 포함)
+      const studentRes = await api.getStudent(studentId)
 
       if (studentRes.success && studentRes.data) {
-        setStudent(studentRes.data)
+        const studentData = studentRes.data
+        
+        // 학생 기본 정보 설정
+        setStudent(studentData)
+        
+        // 최근 출석 기록 설정 (백엔드에서 제공)
+        if (studentData.recent_attendances && Array.isArray(studentData.recent_attendances)) {
+          setAttendanceHistory(studentData.recent_attendances)
+        }
+        
+        // 활성 결제 정보 설정 (백엔드에서 제공)
+        if (studentData.active_payments && Array.isArray(studentData.active_payments)) {
+          setPaymentHistory(studentData.active_payments)
+        }
       } else {
         throw new Error(studentRes.error || '학생 정보를 불러올 수 없습니다.')
-      }
-
-      if (attendanceRes.success && attendanceRes.data) {
-        setAttendanceHistory(Array.isArray(attendanceRes.data) ? attendanceRes.data : [])
-      }
-
-      if (paymentsRes.success && paymentsRes.data) {
-        setPaymentHistory(Array.isArray(paymentsRes.data) ? paymentsRes.data : [])
       }
 
     } catch (err) {
@@ -143,7 +131,8 @@ export default function StudentDetailPage({ params }: { params: { id: string } }
   }
 
   const handleEdit = () => {
-    router.push(`/students/${studentId}/edit`)
+    // 편집 페이지가 아직 구현되지 않음
+    alert('학생 정보 편집 기능은 곧 추가될 예정입니다.')
   }
 
   const handleDelete = async () => {
