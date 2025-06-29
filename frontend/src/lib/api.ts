@@ -1,4 +1,4 @@
-import { Student, Attendance, Payment, CalendarEvent, ApiResponse, StudentFormData } from './types'
+import { Student, Attendance, Payment, CalendarEvent, ApiResponse, StudentFormData, PaymentDetail, PaymentFormData, PaymentStats } from './types'
 
 // API 기본 설정
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
@@ -175,7 +175,7 @@ class ApiClient {
     expires_within_days?: number
     limit?: number
     offset?: number
-  }): Promise<ApiResponse<Payment[]>> {
+  }): Promise<ApiResponse<PaymentDetail[]>> {
     const searchParams = new URLSearchParams()
     if (params?.student_id) searchParams.append('student_id', String(params.student_id))
     if (params?.is_active !== undefined) searchParams.append('is_active', String(params.is_active))
@@ -183,18 +183,45 @@ class ApiClient {
     if (params?.limit) searchParams.append('limit', String(params.limit))
     if (params?.offset) searchParams.append('offset', String(params.offset))
     
-    return this.request<Payment[]>(`/payments?${searchParams}`)
+    return this.request<PaymentDetail[]>(`/payments?${searchParams}`)
   }
 
-  async createPayment(data: any): Promise<ApiResponse<Payment>> {
-    return this.request<Payment>('/payments', {
+  async createPayment(data: PaymentFormData): Promise<ApiResponse<PaymentDetail>> {
+    return this.request<PaymentDetail>('/payments', {
       method: 'POST',
       body: JSON.stringify(data),
     })
   }
 
-  async getExpiringPayments(days: number = 7): Promise<ApiResponse<any>> {
-    return this.request<any>(`/payments/expiring?days=${days}`)
+  async getExpiringPayments(days: number = 7): Promise<ApiResponse<PaymentDetail[]>> {
+    return this.request<PaymentDetail[]>(`/payments/expiring?days=${days}`)
+  }
+
+  async completeSession(paymentId: number, data: {
+    date: string
+    notes?: string
+  }): Promise<ApiResponse<any>> {
+    return this.request<any>(`/payments/${paymentId}/complete-session`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async getPaymentStats(): Promise<ApiResponse<PaymentStats>> {
+    return this.request<PaymentStats>('/payments/stats')
+  }
+
+  async updatePayment(id: number, data: any): Promise<ApiResponse<any>> {
+    return this.request<any>(`/payments/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deletePayment(id: number): Promise<ApiResponse<void>> {
+    return this.request<void>(`/payments/${id}`, {
+      method: 'DELETE',
+    })
   }
 
   async getCalendarEvents(month?: string): Promise<ApiResponse<CalendarEvent[]>> {
