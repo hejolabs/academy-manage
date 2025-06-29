@@ -1,21 +1,30 @@
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, date, time
 from typing import Optional
+from enum import Enum
+
+class AttendanceStatus(str, Enum):
+    present = "present"
+    absent = "absent"
+    late = "late"
+    early_leave = "early_leave"
 
 class AttendanceBase(BaseModel):
     student_id: int
-    check_in_time: datetime
-    check_out_time: Optional[datetime] = None
-    is_present: bool = True
-    notes: Optional[str] = None
+    date: date
+    status: AttendanceStatus
+    time_in: Optional[time] = None
+    time_out: Optional[time] = None
+    note: Optional[str] = None
 
 class AttendanceCreate(AttendanceBase):
     pass
 
 class AttendanceUpdate(BaseModel):
-    check_out_time: Optional[datetime] = None
-    is_present: Optional[bool] = None
-    notes: Optional[str] = None
+    status: Optional[AttendanceStatus] = None
+    time_in: Optional[time] = None
+    time_out: Optional[time] = None
+    note: Optional[str] = None
 
 class Attendance(AttendanceBase):
     id: int
