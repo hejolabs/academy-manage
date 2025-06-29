@@ -1,6 +1,6 @@
 {
-  "name": "Study Room Management System",
-  "short_name": "StudyRoom",
+  "name": "공부방 관리 시스템",
+  "short_name": "공부방",
   "description": "학원 관리 시스템 - 학생, 출석, 결제 관리",
   "start_url": "/",
   "display": "standalone",
@@ -8,5 +8,59 @@
   "theme_color": "#3b82f6",
   "orientation": "portrait-primary",
   "categories": ["education", "productivity"],
-  "lang": "ko-KR"
+  "lang": "ko-KR",
+  "scope": "/",
+  "id": "study-room-management",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png", 
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "출석 체크",
+      "short_name": "출석",
+      "description": "학생 출석을 체크합니다",
+      "url": "/attendance",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "학생 관리",
+      "short_name": "학생",
+      "description": "학생 정보를 관리합니다",
+      "url": "/students",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
 }

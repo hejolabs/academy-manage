@@ -43,6 +43,27 @@
   .tap-highlight-transparent {
     -webkit-tap-highlight-color: transparent;
   }
+  
+  /* PWA 설치 프롬프트 애니메이션 */
+  .animate-slide-up {
+    animation: slide-up 0.3s ease-out;
+  }
+  
+  @keyframes slide-up {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  /* 오프라인 상태 표시 애니메이션 */
+  .animate-pulse-slow {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
 }
 
 @media (max-width: 640px) {

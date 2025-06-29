@@ -3,6 +3,8 @@
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { Cog6ToothIcon, BellIcon } from '@heroicons/react/24/outline'
+import { OnlineIndicator } from '@/components/offline/OfflineStatus'
+import { InstallButton } from '@/components/pwa/InstallPrompt'
 
 const pageConfig: Record<string, { title: string; showDate?: boolean; showSettings?: boolean }> = {
   '/': { title: '대시보드', showDate: true, showSettings: true },
@@ -77,6 +79,14 @@ export default function Header() {
 
         {/* 오른쪽: 액션 버튼들 */}
         <div className="flex items-center space-x-2 ml-4">
+          {/* 온라인 상태 표시 */}
+          <div className="flex items-center space-x-2" title="네트워크 상태">
+            <OnlineIndicator />
+          </div>
+
+          {/* PWA 설치 버튼 */}
+          <InstallButton />
+
           {/* 알림 버튼 */}
           <button
             onClick={handleNotificationClick}

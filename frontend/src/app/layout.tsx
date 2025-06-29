@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import '@/styles/globals.css'
 import Header from '@/components/layout/Header'
 import BottomNavigation from '@/components/layout/BottomNavigation'
+import PWAInitializer from '@/components/pwa/PWAInitializer'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -42,6 +43,9 @@ export default function RootLayout({
           </main>
           <BottomNavigation />
         </div>
+        
+        {/* PWA 및 오프라인 기능 초기화 */}
+        <PWAInitializer />
       </body>
     </html>
   )
