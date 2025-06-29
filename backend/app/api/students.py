@@ -19,7 +19,7 @@ from ..schemas.student import (
     ActivePaymentInfo
 )
 
-router = APIRouter(prefix="/api/students", tags=["students"])
+router = APIRouter(prefix="/students", tags=["students"])
 
 def calculate_attendance_rate(student_id: int, db: Session) -> Optional[float]:
     """Calculate attendance rate for a student in the last 30 days"""

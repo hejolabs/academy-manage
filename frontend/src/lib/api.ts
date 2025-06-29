@@ -1,7 +1,7 @@
 import { Student, Attendance, Payment, CalendarEvent, ApiResponse, StudentFormData } from './types'
 
 // API 기본 설정
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
 
 class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -32,19 +32,19 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
 export const dashboardApi = {
   // 오늘 출석 현황
   getTodayAttendance: () => 
-    fetchApi<any>('/api/attendance/today'),
+    fetchApi<any>('/attendance/today'),
 
   // 만료 예정 결제
   getExpiringPayments: (days: number = 7) => 
-    fetchApi<any>(`/api/payments/expiring?days=${days}`),
+    fetchApi<any>(`/payments/expiring?days=${days}`),
 
   // 활성 학생 수
   getActiveStudents: () => 
-    fetchApi<any>('/api/students?is_active=true'),
+    fetchApi<any>('/students?is_active=true'),
 
   // 결제/매출 통계
   getPaymentStats: (period: 'monthly' | 'quarterly' = 'monthly') => 
-    fetchApi<any>(`/api/payments/stats?period=${period}`),
+    fetchApi<any>(`/payments/stats?period=${period}`),
 }
 
 // 기존 ApiClient 클래스 (호환성 유지)
@@ -89,29 +89,29 @@ class ApiClient {
     if (params?.limit) searchParams.append('limit', String(params.limit))
     if (params?.offset) searchParams.append('offset', String(params.offset))
     
-    return this.request<any>(`/api/students?${searchParams}`)
+    return this.request<any>(`/students?${searchParams}`)
   }
 
   async getStudent(id: number): Promise<ApiResponse<Student>> {
-    return this.request<Student>(`/api/students/${id}`)
+    return this.request<Student>(`/students/${id}`)
   }
 
   async createStudent(data: StudentFormData): Promise<ApiResponse<Student>> {
-    return this.request<Student>('/api/students', {
+    return this.request<Student>('/students', {
       method: 'POST',
       body: JSON.stringify(data),
     })
   }
 
   async updateStudent(id: number, data: Partial<StudentFormData>): Promise<ApiResponse<Student>> {
-    return this.request<Student>(`/api/students/${id}`, {
+    return this.request<Student>(`/students/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     })
   }
 
   async deleteStudent(id: number): Promise<ApiResponse<void>> {
-    return this.request<void>(`/api/students/${id}`, {
+    return this.request<void>(`/students/${id}`, {
       method: 'DELETE',
     })
   }
@@ -133,7 +133,7 @@ class ApiClient {
     if (params?.limit) searchParams.append('limit', String(params.limit))
     if (params?.offset) searchParams.append('offset', String(params.offset))
     
-    return this.request<Attendance[]>(`/api/attendance?${searchParams}`)
+    return this.request<Attendance[]>(`/attendance?${searchParams}`)
   }
 
   async markAttendance(data: {
@@ -143,14 +143,14 @@ class ApiClient {
     time_in?: string
     note?: string
   }): Promise<ApiResponse<Attendance>> {
-    return this.request<Attendance>('/api/attendance', {
+    return this.request<Attendance>('/attendance', {
       method: 'POST',
       body: JSON.stringify(data),
     })
   }
 
   async getTodayAttendance(): Promise<ApiResponse<any>> {
-    return this.request<any>('/api/attendance/today')
+    return this.request<any>('/attendance/today')
   }
 
   // 결제 API
@@ -168,18 +168,18 @@ class ApiClient {
     if (params?.limit) searchParams.append('limit', String(params.limit))
     if (params?.offset) searchParams.append('offset', String(params.offset))
     
-    return this.request<Payment[]>(`/api/payments?${searchParams}`)
+    return this.request<Payment[]>(`/payments?${searchParams}`)
   }
 
   async createPayment(data: any): Promise<ApiResponse<Payment>> {
-    return this.request<Payment>('/api/payments', {
+    return this.request<Payment>('/payments', {
       method: 'POST',
       body: JSON.stringify(data),
     })
   }
 
   async getExpiringPayments(days: number = 7): Promise<ApiResponse<any>> {
-    return this.request<any>(`/api/payments/expiring?days=${days}`)
+    return this.request<any>(`/payments/expiring?days=${days}`)
   }
 
   async getCalendarEvents(month?: string): Promise<ApiResponse<CalendarEvent[]>> {

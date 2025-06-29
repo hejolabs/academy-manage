@@ -21,7 +21,7 @@ from ..schemas.attendance import (
     AttendanceStatus
 )
 
-router = APIRouter(prefix="/api/attendance", tags=["attendance"])
+router = APIRouter(prefix="/attendance", tags=["attendance"])
 
 @router.get("/", response_model=List[AttendanceWithStudent])
 def get_attendance_records(

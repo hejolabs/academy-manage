@@ -26,7 +26,7 @@ from ..utils.date_calculator import (
     get_current_year_holidays
 )
 
-router = APIRouter(prefix="/api/payments", tags=["payments"])
+router = APIRouter(prefix="/payments", tags=["payments"])
 
 @router.post("/", response_model=PaymentSchema, status_code=status.HTTP_201_CREATED)
 def create_payment(payment_request: PaymentCreateRequest, db: Session = Depends(get_db)):
