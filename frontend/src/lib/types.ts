@@ -34,8 +34,30 @@ export interface CalendarEvent {
   id: number
   title: string
   date: string
-  type: 'holiday' | 'exam' | 'event' | 'meeting'
+  type: 'holiday' | 'exam' | 'event' | 'meeting' | 'session_complete' | 'payment_expire' | 'class_day'
   description?: string
+  studentId?: number
+  studentName?: string
+  priority?: 'high' | 'medium' | 'low'
+}
+
+export interface SessionProgress {
+  studentId: number
+  studentName: string
+  totalSessions: number
+  completedSessions: number
+  estimatedCompletionDate: string
+  paymentEndDate: string
+}
+
+export interface CalendarDayData {
+  date: string
+  events: CalendarEvent[]
+  hasClass: boolean
+  hasSessionComplete: boolean
+  hasPaymentExpire: boolean
+  isToday: boolean
+  isCurrentMonth: boolean
 }
 
 export interface ApiResponse<T> {
