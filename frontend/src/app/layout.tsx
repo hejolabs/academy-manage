@@ -9,12 +9,6 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: '공부방 관리 시스템',
   description: '학생 출석 및 수납 관리 시스템',
-  manifest: '/manifest.json',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'default',
-    title: '공부방 관리',
-  },
 }
 
 export const viewport: Viewport = {
