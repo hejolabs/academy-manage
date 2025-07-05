@@ -1,6 +1,6 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { Cog6ToothIcon, BellIcon } from '@heroicons/react/24/outline'
 
@@ -14,6 +14,7 @@ const pageConfig: Record<string, { title: string; showDate?: boolean; showSettin
 
 export default function Header() {
   const pathname = usePathname()
+  const router = useRouter()
   const [currentTime, setCurrentTime] = useState('')
   const [currentDate, setCurrentDate] = useState('')
 
@@ -55,8 +56,7 @@ export default function Header() {
   }
 
   const handleNotificationClick = () => {
-    // TODO: 알림 목록 보기
-    console.log('Notifications clicked')
+    router.push('/notifications')
   }
 
   return (

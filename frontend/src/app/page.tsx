@@ -5,7 +5,6 @@ import { AutoFloatingActionButton } from '@/components/ui/FloatingActionButton'
 import StatCard from '@/components/dashboard/StatCard'
 import TodayOverview from '@/components/dashboard/TodayOverview'
 import QuickActions from '@/components/dashboard/QuickActions'
-import AlertCenter from '@/components/dashboard/AlertCenter'
 
 export default function HomePage() {
   // 전체 통계 데이터 (실제로는 API에서 가져올 것)
@@ -76,8 +75,6 @@ export default function HomePage() {
         <QuickActions />
       </div>
 
-      {/* 알림 센터 */}
-      <AlertCenter />
 
       {/* 페이지별 FAB */}
       <AutoFloatingActionButton />
